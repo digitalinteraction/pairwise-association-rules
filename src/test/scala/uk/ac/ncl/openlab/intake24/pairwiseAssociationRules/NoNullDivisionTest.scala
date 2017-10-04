@@ -5,7 +5,7 @@ import org.scalatest.FunSuite
 /**
   * Created by Tim Osadchiy on 03/10/2017.
   */
-trait NoNullDivision extends FunSuite {
+trait NoNullDivisionTest extends FunSuite {
 
   private def assertTask(params: PairwiseAssociationRulesConstructorParams) = {
     val associationRules = PairwiseAssociationRules(Some(params))
