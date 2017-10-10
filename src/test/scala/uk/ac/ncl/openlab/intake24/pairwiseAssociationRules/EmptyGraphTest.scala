@@ -11,8 +11,7 @@ trait EmptyGraphTest extends FunSuite {
     val p = PairwiseAssociationRules(None)
     p.addTransactions(Seq(Seq("a", "b", "c"), Seq("a", "b")))
     val params = p.getParams()
-    assert(params.numberOfTransactions == 2 &&
-      params.occurrences("a") == 2 &&
+    assert(params.occurrences("a") == 2 &&
       params.coOccurrences("a")("c") == 1)
   }
 

@@ -14,11 +14,10 @@ trait GeneralTest extends FunSuite {
 
   private val initialTransactions = TestConst.initialTransactions
 
-  private def combine(probabilities: Seq[Double], supports: Seq[Int], inputSize: Int, transactionsSize: Int) = {
-    (1 - probabilities.foldLeft(1d)((a, b) => a * (1 - b))) * supports.map(s => s / transactionsSize.toDouble).sum / inputSize.toDouble
-  }
+  private def combine(combs: Seq[Cmb]) =
+    combs.map(i => i.coOccurrences.toDouble / i.selfOccurrences).sum * combs.map(_.selfOccurrences).sum
 
-  private def combine(probability: Double, support: Double, transactionsSize: Int) = probability * support / transactionsSize.toDouble
+  private def combine(comb: Cmb) = comb.coOccurrences.toDouble
 
   private def assertTask(rules: PairwiseAssociationRules, tasks: Seq[(Seq[String], Map[String, Double])]) = {
     assert(tasks.forall { task =>
@@ -33,31 +32,30 @@ trait GeneralTest extends FunSuite {
   test("General test") {
     val firstTask = Seq(
       Seq("a") -> Map(
-        "b" -> combine(1 / 2d, 1, initialTransactions.size),
-        "c" -> combine(1 / 2d, 1, initialTransactions.size),
-        "d" -> combine(2 / 2d, 2, initialTransactions.size),
-        "e" -> combine(1 / 2d, 1, initialTransactions.size)
+        "b" -> combine(Cmb(1, 2)),
+        "c" -> combine(Cmb(1, 2)),
+        "d" -> combine(Cmb(2, 2)),
+        "e" -> combine(Cmb(1, 2))
       ),
       Seq("d") -> Map(
-        "a" -> combine(2 / 3d, 2, initialTransactions.size),
-        "b" -> combine(2 / 3d, 2, initialTransactions.size),
-        "c" -> combine(1 / 3d, 1, initialTransactions.size),
-        "e" -> combine(2 / 3d, 2, initialTransactions.size)
+        "a" -> combine(Cmb(2, 3)),
+        "b" -> combine(Cmb(2, 3)),
+        "c" -> combine(Cmb(1, 3)),
+        "e" -> combine(Cmb(2, 3))
       ),
       Seq("a", "d") -> Map(
-        "b" -> combine(Seq(1 / 2d, 2 / 3d), Seq(1, 2), 2, initialTransactions.size),
-        "c" -> combine(Seq(1 / 2d, 1 / 3d), Seq(1, 1), 2, initialTransactions.size),
-        "e" -> combine(Seq(1 / 2d, 2 / 3d), Seq(1, 2), 2, initialTransactions.size)
+        "b" -> combine(Seq(Cmb(1, 2), Cmb(2, 3))),
+        "c" -> combine(Seq(Cmb(1, 2), Cmb(1, 3))),
+        "e" -> combine(Seq(Cmb(1, 2), Cmb(2, 3)))
       ),
       Seq("a", "d", "f") -> Map(
-        "b" -> combine(Seq(1 / 2d, 2 / 3d), Seq(1, 2), 3, initialTransactions.size),
-        "c" -> combine(Seq(1 / 2d, 1 / 3d), Seq(1, 1), 3, initialTransactions.size),
-        "e" -> combine(Seq(1 / 2d, 2 / 3d), Seq(1, 2), 3, initialTransactions.size)
+        "b" -> combine(Seq(Cmb(1, 2), Cmb(2, 3))),
+        "c" -> combine(Seq(Cmb(1, 2), Cmb(1, 3))),
+        "e" -> combine(Seq(Cmb(1, 2), Cmb(2, 3)))
       )
     ).map(i => i._1 -> i._2)
 
     val associationRulesParams = PairwiseAssociationRulesConstructorParams(
-      initialTransactions.size,
       PairwiseAssociationRules.buildOccurrenceMap(initialTransactions),
       PairwiseAssociationRules.buildCoOccurrenceMap(initialTransactions)
     )
@@ -68,7 +66,6 @@ trait GeneralTest extends FunSuite {
 
   test("Add rules test") {
     val associationRulesParams = PairwiseAssociationRulesConstructorParams(
-      initialTransactions.size,
       PairwiseAssociationRules.buildOccurrenceMap(initialTransactions),
       PairwiseAssociationRules.buildCoOccurrenceMap(initialTransactions)
     )
@@ -82,14 +79,16 @@ trait GeneralTest extends FunSuite {
     val extendedTransactions = initialTransactions ++ Seq(newTrans)
     val secondTask = Seq(
       Seq("e", "f") -> Map(
-        "a" -> combine(Seq(1 / 3d, 0d), Seq(1), 2, extendedTransactions.size),
-        "d" -> combine(Seq(2 / 3d, 0d), Seq(2), 2, extendedTransactions.size),
-        "b" -> combine(Seq(1 / 3d, 0d), Seq(1), 2, extendedTransactions.size),
-        "c" -> combine(Seq(1 / 3d, 1d), Seq(1, 1), 2, extendedTransactions.size)
+        "a" -> combine(Cmb(1, 3)),
+        "d" -> combine(Cmb(2, 3)),
+        "b" -> combine(Cmb(1, 3)),
+        "c" -> combine(Seq(Cmb(1, 3), Cmb(1, 1)))
       )
     )
 
     assertTask(associationRules, secondTask)
   }
+
+  case class Cmb(coOccurrences: Int, selfOccurrences: Int)
 
 }

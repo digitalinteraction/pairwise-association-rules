@@ -16,11 +16,9 @@ private object PairwiseAssociationRulesUtils {
     }
 }
 
-case class PairwiseAssociationRulesConstructorParams(numberOfTransactions: Int, occurrences: Map[String, Int], coOccurrences: Map[String, Map[String, Int]])
+case class PairwiseAssociationRulesConstructorParams(occurrences: Map[String, Int], coOccurrences: Map[String, Map[String, Int]])
 
 class PairwiseAssociationRules(params: Option[PairwiseAssociationRulesConstructorParams]) {
-
-  private var currentTransactionsSize = params.map(_.numberOfTransactions).getOrElse(0).toDouble
 
   private val occurrenceMap = collection.mutable.Map(params.map(_.occurrences)
     .getOrElse(Map()).toSeq: _*).withDefaultValue(0)
@@ -29,39 +27,32 @@ class PairwiseAssociationRules(params: Option[PairwiseAssociationRulesConstructo
     .map(n => n._1 -> collection.mutable.Map(n._2.toSeq: _*)).toSeq: _*)
     .withDefaultValue(collection.mutable.Map().withDefaultValue(0))
 
-  def recommend(items: Seq[String]): Seq[(String, Double)] =
-    if (currentTransactionsSize < 1) {
+  def recommend(items: Seq[String]): Seq[(String, Double)] = {
+    val distinctItems = items.distinct
+    distinctItems.flatMap {
+      item => occurrenceMap.get(item).map(oc => item -> oc.toDouble)
+    }.flatMap { itemNode =>
+      if (itemNode._2 < 1)
+
       /**
         * Avoiding division by zero
         */
-      Nil
-    } else {
-      val distinctItems = items.distinct
-      distinctItems.flatMap {
-        item => occurrenceMap.get(item).map(oc => item -> oc.toDouble)
-      }.flatMap { itemNode =>
-        if (itemNode._2 < 1)
-
-        /**
-          * Avoiding division by zero
-          */
-          None
-        else coOccurrenceMap.get(itemNode._1).map { cooc =>
-          cooc.map(kv => (kv._1, kv._2 / itemNode._2, kv._2 / currentTransactionsSize))
-        }
-      }.flatten.groupBy(_._1)
-        .filterNot(itemProbabilities => items.contains(itemProbabilities._1))
-        .map(itemProbabilities => itemProbabilities._1 -> {
-          val prob = 1 - itemProbabilities._2.map(_._2).foldLeft(1d)((a, b) => a * (1 - b))
-          val support = itemProbabilities._2.map(_._3).sum / distinctItems.size
-          prob * support
-        })
-        .toSeq.sortBy(-_._2)
-    }
+        None
+      else coOccurrenceMap.get(itemNode._1).map { cooc =>
+        cooc.map(kv => (kv._1, kv._2 / itemNode._2, itemNode._2))
+      }
+    }.flatten.groupBy(_._1)
+      .filterNot(itemProbabilities => items.contains(itemProbabilities._1))
+      .map(itemProbabilities => itemProbabilities._1 -> {
+        val prob = itemProbabilities._2.map(_._2).sum
+        val support = itemProbabilities._2.map(_._3).sum
+        prob * support
+      })
+      .toSeq.sortBy(-_._2)
+  }
 
   def addTransaction(transaction: Seq[String]) = {
     val disTrans = transaction.distinct
-    currentTransactionsSize += 1
     disTrans.foreach { i =>
       occurrenceMap += (i -> (occurrenceMap(i) + 1))
     }
@@ -75,7 +66,7 @@ class PairwiseAssociationRules(params: Option[PairwiseAssociationRulesConstructo
     transactions.foreach(t => addTransaction(t))
   }
 
-  def getParams() = PairwiseAssociationRulesConstructorParams(currentTransactionsSize.toInt, occurrenceMap.toMap,
+  def getParams() = PairwiseAssociationRulesConstructorParams(occurrenceMap.toMap,
     coOccurrenceMap.map(n => n._1 -> n._2.toMap).toMap)
 
 }
