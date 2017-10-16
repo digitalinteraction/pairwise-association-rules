@@ -56,6 +56,7 @@ trait GeneralTest extends FunSuite {
     ).map(i => i._1 -> i._2)
 
     val associationRulesParams = PairwiseAssociationRulesConstructorParams(
+      initialTransactions.size,
       PairwiseAssociationRules.buildOccurrenceMap(initialTransactions),
       PairwiseAssociationRules.buildCoOccurrenceMap(initialTransactions)
     )
@@ -66,6 +67,7 @@ trait GeneralTest extends FunSuite {
 
   test("Add rules test") {
     val associationRulesParams = PairwiseAssociationRulesConstructorParams(
+      initialTransactions.size,
       PairwiseAssociationRules.buildOccurrenceMap(initialTransactions),
       PairwiseAssociationRules.buildCoOccurrenceMap(initialTransactions)
     )

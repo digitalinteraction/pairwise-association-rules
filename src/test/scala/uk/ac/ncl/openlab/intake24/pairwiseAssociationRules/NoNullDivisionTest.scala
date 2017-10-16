@@ -14,6 +14,7 @@ trait NoNullDivisionTest extends FunSuite {
 
   test("No null division by occurrences") {
     val associationRulesParams = PairwiseAssociationRulesConstructorParams(
+      TestConst.initialTransactions.size,
       PairwiseAssociationRules.buildOccurrenceMap(TestConst.initialTransactions).map(n => n._1 -> 0),
       PairwiseAssociationRules.buildCoOccurrenceMap(TestConst.initialTransactions)
     )

@@ -16,9 +16,11 @@ private object PairwiseAssociationRulesUtils {
     }
 }
 
-case class PairwiseAssociationRulesConstructorParams(occurrences: Map[String, Int], coOccurrences: Map[String, Map[String, Int]])
+case class PairwiseAssociationRulesConstructorParams(numberOfTransactions: Int, occurrences: Map[String, Int], coOccurrences: Map[String, Map[String, Int]])
 
 class PairwiseAssociationRules(params: Option[PairwiseAssociationRulesConstructorParams]) {
+
+  private var currentTransactionsSize = params.map(_.numberOfTransactions).getOrElse(0).toDouble
 
   private val occurrenceMap = collection.mutable.Map(params.map(_.occurrences)
     .getOrElse(Map()).toSeq: _*).withDefaultValue(0)
@@ -53,6 +55,7 @@ class PairwiseAssociationRules(params: Option[PairwiseAssociationRulesConstructo
 
   def addTransaction(transaction: Seq[String]) = {
     val disTrans = transaction.distinct
+    currentTransactionsSize += 1
     disTrans.foreach { i =>
       occurrenceMap += (i -> (occurrenceMap(i) + 1))
     }
@@ -66,7 +69,7 @@ class PairwiseAssociationRules(params: Option[PairwiseAssociationRulesConstructo
     transactions.foreach(t => addTransaction(t))
   }
 
-  def getParams() = PairwiseAssociationRulesConstructorParams(occurrenceMap.toMap,
+  def getParams() = PairwiseAssociationRulesConstructorParams(currentTransactionsSize.toInt, occurrenceMap.toMap,
     coOccurrenceMap.map(n => n._1 -> n._2.toMap).toMap)
 
 }
