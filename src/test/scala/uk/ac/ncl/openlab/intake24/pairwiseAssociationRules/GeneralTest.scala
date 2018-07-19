@@ -55,24 +55,13 @@ trait GeneralTest extends FunSuite {
       )
     ).map(i => i._1 -> i._2)
 
-    val associationRulesParams = PairwiseAssociationRulesConstructorParams(
-      initialTransactions.size,
-      PairwiseAssociationRules.buildOccurrenceMap(initialTransactions),
-      PairwiseAssociationRules.buildCoOccurrenceMap(initialTransactions)
-    )
-    val associationRules = PairwiseAssociationRules(Some(associationRulesParams))
+    val associationRules = PairwiseAssociationRules(initialTransactions)
 
     assertTask(associationRules, firstTask)
   }
 
   test("Add rules test") {
-    val associationRulesParams = PairwiseAssociationRulesConstructorParams(
-      initialTransactions.size,
-      PairwiseAssociationRules.buildOccurrenceMap(initialTransactions),
-      PairwiseAssociationRules.buildCoOccurrenceMap(initialTransactions)
-    )
-
-    val associationRules = PairwiseAssociationRules(Some(associationRulesParams))
+    val associationRules = PairwiseAssociationRules(initialTransactions)
 
     val newTrans = Seq("c", "e", "f")
 

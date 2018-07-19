@@ -77,6 +77,15 @@ class PairwiseAssociationRules(params: Option[PairwiseAssociationRulesConstructo
 object PairwiseAssociationRules {
   def apply(params: Option[PairwiseAssociationRulesConstructorParams]): PairwiseAssociationRules = new PairwiseAssociationRules(params)
 
+  def apply(transactions: Seq[Seq[String]]): PairwiseAssociationRules = {
+    val associationRulesParams = PairwiseAssociationRulesConstructorParams(
+      transactions.size,
+      PairwiseAssociationRules.buildOccurrenceMap(transactions),
+      PairwiseAssociationRules.buildCoOccurrenceMap(transactions)
+    )
+    PairwiseAssociationRules(Some(associationRulesParams))
+  }
+
   private def transactionsDistinctItems(transactions: Seq[Seq[String]]) = transactions.map(_.distinct)
 
   def buildOccurrenceMap(transactions: Seq[Seq[String]]) =
