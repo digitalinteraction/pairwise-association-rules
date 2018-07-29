@@ -72,6 +72,15 @@ class PairwiseAssociationRules(params: Option[PairwiseAssociationRulesConstructo
   def getParams() = PairwiseAssociationRulesConstructorParams(currentTransactionsSize.toInt, occurrenceMap.toMap,
     coOccurrenceMap.map(n => n._1 -> n._2.toMap).toMap)
 
+  def reduce(coOccurrenceThreshold: Int): PairwiseAssociationRules = {
+    val params = getParams()
+    val updatedCoOccurrenceMap = params.coOccurrences.map {
+      kv => kv._1 -> kv._2.filter(_._2 > coOccurrenceThreshold)
+    }.filter(_._2.nonEmpty)
+    val newParams = params.copy(coOccurrences = updatedCoOccurrenceMap)
+    PairwiseAssociationRules(Some(newParams))
+  }
+
 }
 
 object PairwiseAssociationRules {

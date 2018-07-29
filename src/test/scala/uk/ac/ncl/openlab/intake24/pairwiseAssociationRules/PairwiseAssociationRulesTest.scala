@@ -6,7 +6,8 @@ package uk.ac.ncl.openlab.intake24.pairwiseAssociationRules
 class PairwiseAssociationRulesTest
   extends GeneralTest
     with NoNullDivisionTest
-    with EmptyGraphTest {
+    with EmptyGraphTest
+    with ReduceTest {
 
 
 }
