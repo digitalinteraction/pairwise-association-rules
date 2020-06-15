@@ -31,7 +31,7 @@ class PairwiseAssociationRules(params: Option[PairwiseAssociationRulesConstructo
 
   def recommend(items: Seq[String]): Seq[(String, Double)] = {
     val distinctItems = items.distinct
-    distinctItems.flatMap {
+    val a = distinctItems.flatMap {
       item => occurrenceMap.get(item).map(oc => item -> oc.toDouble)
     }.flatMap { itemNode =>
       if (itemNode._2 < 1)
@@ -44,7 +44,9 @@ class PairwiseAssociationRules(params: Option[PairwiseAssociationRulesConstructo
         cooc.map(kv => (kv._1, kv._2 / itemNode._2, itemNode._2))
       }
     }.flatten.groupBy(_._1)
-      .filterNot(itemProbabilities => items.contains(itemProbabilities._1))
+
+
+      a.filterNot(itemProbabilities => items.contains(itemProbabilities._1))
       .map(itemProbabilities => itemProbabilities._1 -> {
         val prob = itemProbabilities._2.map(_._2).sum
         val support = itemProbabilities._2.map(_._3).sum
