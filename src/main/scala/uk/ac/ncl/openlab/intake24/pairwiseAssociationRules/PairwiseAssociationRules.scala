@@ -1,6 +1,6 @@
 /**
-  * Created by Tim Osadchiy on 02/10/2017.
-  */
+ * Created by Tim Osadchiy on 02/10/2017.
+ */
 
 
 package uk.ac.ncl.openlab.intake24.pairwiseAssociationRules
@@ -22,12 +22,24 @@ class PairwiseAssociationRules(params: Option[PairwiseAssociationRulesConstructo
 
   private var currentTransactionsSize = params.map(_.numberOfTransactions).getOrElse(0).toDouble
 
-  private val occurrenceMap = collection.mutable.Map(params.map(_.occurrences)
-    .getOrElse(Map()).toSeq: _*).withDefaultValue(0)
+  private val occurrenceMap = collection.mutable.Map[String, Int]().withDefaultValue(0)
 
-  private val coOccurrenceMap = collection.mutable.Map(params.map(_.coOccurrences).getOrElse(Map())
-    .map(n => n._1 -> collection.mutable.Map(n._2.toSeq: _*)).toSeq: _*)
+  params.map(_.occurrences).foreach(
+    occurrences =>
+      occurrenceMap ++= occurrences
+  )
+
+  private val coOccurrenceMap = collection.mutable.Map[String, collection.mutable.Map[String, Int]]()
     .withDefaultValue(collection.mutable.Map().withDefaultValue(0))
+
+  params.map(_.coOccurrences).foreach {
+    _.foreach {
+      case (key, occurrences) =>
+        val m = collection.mutable.Map[String, Int]()
+        m ++= occurrences
+        coOccurrenceMap += ((key, m))
+    }
+  }
 
   def recommend(items: Seq[String]): Seq[(String, Double)] = {
     val distinctItems = items.distinct
@@ -37,8 +49,8 @@ class PairwiseAssociationRules(params: Option[PairwiseAssociationRulesConstructo
       if (itemNode._2 < 1)
 
       /**
-        * Avoiding division by zero
-        */
+       * Avoiding division by zero
+       */
         None
       else coOccurrenceMap.get(itemNode._1).map { cooc =>
         cooc.map(kv => (kv._1, kv._2 / itemNode._2, itemNode._2))
@@ -46,7 +58,7 @@ class PairwiseAssociationRules(params: Option[PairwiseAssociationRulesConstructo
     }.flatten.groupBy(_._1)
 
 
-      a.filterNot(itemProbabilities => items.contains(itemProbabilities._1))
+    a.filterNot(itemProbabilities => items.contains(itemProbabilities._1))
       .map(itemProbabilities => itemProbabilities._1 -> {
         val prob = itemProbabilities._2.map(_._2).sum
         val support = itemProbabilities._2.map(_._3).sum
@@ -59,11 +71,11 @@ class PairwiseAssociationRules(params: Option[PairwiseAssociationRulesConstructo
     val disTrans = transaction.distinct
     currentTransactionsSize += 1
     disTrans.foreach { i =>
-      occurrenceMap += (i -> (occurrenceMap(i) + 1))
+      occurrenceMap.put(i, occurrenceMap.getOrElse(i, 0) + 1)
     }
     PairwiseAssociationRulesUtils.pairs(disTrans).foreach { pair =>
-      coOccurrenceMap += pair._1 -> (coOccurrenceMap(pair._1) +
-        (pair._2 -> (coOccurrenceMap(pair._1).getOrElse(pair._2, 0) + 1)))
+      val m = coOccurrenceMap.getOrElseUpdate(pair._1, collection.mutable.Map())
+      m.put(pair._2, m.getOrElse(pair._2, 0) + 1)
     }
   }
 
